@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -28,5 +29,21 @@ class UserTest extends TestCase
     {
         $user = Auth::user();
         self::assertNull($user);
+    }
+
+    public function testLogin()
+    {
+        $this->seed([UserSeeder::class]);
+        $this->get('/users/login?email=test@gmail.com&password=password')->assertRedirect("/users/current");
+
+        $this->get('/users/login?email=salah&password=password')->assertSeeText("Wrong credentials");
+    }
+
+    public function testCurrent()
+    {
+        $this->seed([UserSeeder::class]);
+        $this->get('/users/current')->assertStatus(302)->assertRedirect("/login");
+        $user = User::where('email', 'test@gmail.com')->firstOrFail();
+        $this->actingAs($user)->get('/users/current')->assertSeeText("Hello test");
     }
 }
