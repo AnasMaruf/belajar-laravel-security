@@ -46,4 +46,33 @@ class UserTest extends TestCase
         $user = User::where('email', 'test@gmail.com')->firstOrFail();
         $this->actingAs($user)->get('/users/current')->assertSeeText("Hello test");
     }
+
+    public function testTokenGuard()
+    {
+        $this->seed([UserSeeder::class]);
+        $this->get('/api/users/current',[
+            "Accept" => "application/json"
+        ])->assertStatus(401);
+        $this->get('/api/users/current',[
+            "Accept" => "application/json",
+            "API-Key" => "secret",
+        ])->assertSeeText("Hello test");
+    }
+
+    public function testUserProvider()
+    {
+        $this->seed([UserSeeder::class]);
+
+        $this->get("/simple-api/users/current", [
+            "Accept" => "application/json"
+        ])
+            ->assertStatus(401);
+
+        $this->get("/simple-api/users/current", [
+            "Accept" => "application/json",
+            "API-Key" => "secret"
+        ])
+            ->assertSeeText("Hello test");
+
+    }
 }
